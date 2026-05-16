@@ -1,20 +1,26 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 public class MessageBullet : MonoBehaviour
 {
+    static readonly Color SignTextColor = new Color(0.12f, 0.07f, 0.03f, 1f);
+
     [Header("UI References")]
     public RectTransform rectTransform;
+    [FormerlySerializedAs("text")]
     public TMP_Text messageText;
     public Image backgroundImage;
 
     [Header("Auto Size")]
-    public float minWidth = 260f;
-    public float maxWidth = 760f;
-    public float height = 80f;
-    public float widthPerCharacter = 16f;
-    public float horizontalTextPadding = 48f;
+    public float minWidth = 320f;
+    public float maxWidth = 820f;
+    public float height = 96f;
+    public float widthPerCharacter = 18f;
+    public float horizontalTextPadding = 58f;
+
+    TMP_FontAsset signFont;
 
     void Reset()
     {
@@ -25,6 +31,8 @@ public class MessageBullet : MonoBehaviour
 
     void Awake()
     {
+        signFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/Electronic Highway Sign SDF");
+
         if (rectTransform == null)
         {
             rectTransform = GetComponent<RectTransform>();
@@ -46,6 +54,7 @@ public class MessageBullet : MonoBehaviour
         if (messageText != null)
         {
             messageText.text = message;
+            ApplyTextStyle(messageText);
             messageText.textWrappingMode = TextWrappingModes.Normal;
             messageText.alignment = TextAlignmentOptions.Center;
         }
@@ -79,6 +88,8 @@ public class MessageBullet : MonoBehaviour
 
         if (messageText != null)
         {
+            ApplyTextStyle(messageText);
+
             RectTransform textRect = messageText.GetComponent<RectTransform>();
             if (textRect != null)
             {
@@ -88,5 +99,20 @@ public class MessageBullet : MonoBehaviour
                 textRect.offsetMax = new Vector2(-horizontalTextPadding * 0.5f, 0f);
             }
         }
+    }
+
+    void ApplyTextStyle(TMP_Text text)
+    {
+        if (signFont != null)
+        {
+            text.font = signFont;
+        }
+
+        text.fontSize = 34f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = SignTextColor;
+        text.enableKerning = false;
+        text.characterSpacing = 1.5f;
+        text.raycastTarget = false;
     }
 }

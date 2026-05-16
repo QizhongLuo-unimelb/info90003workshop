@@ -1,10 +1,13 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 using TMPro;
 
 public class MessageBulletSpawner : MonoBehaviour
 {
+    static readonly Color SignTextColor = new Color(0.12f, 0.07f, 0.03f, 1f);
+
     [Header("Canvas Prefab Settings")]
     public RectTransform messagePrefab;
     public RectTransform canvasParent;
@@ -43,23 +46,31 @@ public class MessageBulletSpawner : MonoBehaviour
     public Material[] prefabMaterials;
 
     [Header("Canvas Spawn Settings")]
-    public float spawnInterval = 0.12f;
-    public float verticalRange = 260f;
-    public float horizontalPadding = 260f;
+    public float spawnInterval = 0.22f;
+    [FormerlySerializedAs("verticalRange")]
+    public float horizontalRange = 520f;
+    [FormerlySerializedAs("horizontalPadding")]
+    public float verticalPadding = 180f;
 
     [Header("Canvas Movement")]
-    public float minSpeed = 500f;
-    public float maxSpeed = 900f;
-    public float lifeTime = 8f;
+    public float minSpeed = 210f;
+    public float maxSpeed = 360f;
+    public float lifeTime = 9f;
 
     [Header("Auto Size")]
-    public float minWidth = 260f;
-    public float maxWidth = 760f;
-    public float height = 80f;
-    public float widthPerCharacter = 16f;
-    public float horizontalTextPadding = 48f;
+    public float minWidth = 320f;
+    public float maxWidth = 820f;
+    public float height = 96f;
+    public float widthPerCharacter = 18f;
+    public float horizontalTextPadding = 58f;
 
     private float timer;
+    TMP_FontAsset signFont;
+
+    void Awake()
+    {
+        signFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/Electronic Highway Sign SDF");
+    }
 
     void Update()
     {
@@ -89,40 +100,51 @@ public class MessageBulletSpawner : MonoBehaviour
         if (text != null)
         {
             text.text = randomMessage;
+            if (signFont != null)
+            {
+                text.font = signFont;
+            }
+
             text.textWrappingMode = TextWrappingModes.Normal;
             text.alignment = TextAlignmentOptions.Center;
+            text.fontSize = 34f;
+            text.fontStyle = FontStyles.Bold;
+            text.color = SignTextColor;
+            text.enableKerning = false;
+            text.characterSpacing = 1.5f;
         }
 
         ResizeMessageObject(obj, text, randomMessage);
         ApplyRandomMaterial(obj.gameObject);
 
         float canvasWidth = canvasParent.rect.width;
-        float startX = -canvasWidth * 0.5f - horizontalPadding;
-        float endX = canvasWidth * 0.5f + horizontalPadding;
-        float randomY = Random.Range(-verticalRange, verticalRange);
+        float canvasHeight = canvasParent.rect.height;
+        float randomX = Random.Range(-Mathf.Min(horizontalRange, canvasWidth * 0.42f), Mathf.Min(horizontalRange, canvasWidth * 0.42f));
+        float startY = canvasHeight * 0.5f + verticalPadding;
+        float endY = -canvasHeight * 0.5f - verticalPadding;
 
         obj.anchorMin = new Vector2(0.5f, 0.5f);
         obj.anchorMax = new Vector2(0.5f, 0.5f);
         obj.pivot = new Vector2(0.5f, 0.5f);
-        obj.anchoredPosition = new Vector2(startX, randomY);
+        obj.anchoredPosition = new Vector2(randomX, startY);
         obj.localRotation = Quaternion.identity;
         obj.localScale = Vector3.one;
 
         float randomSpeed = Random.Range(minSpeed, maxSpeed);
-        StartCoroutine(MoveMessageAcrossScreen(obj, startX, endX, randomY, randomSpeed));
+        StartCoroutine(MoveMessageDownScreen(obj, randomX, startY, endY, randomSpeed));
     }
 
-    IEnumerator MoveMessageAcrossScreen(RectTransform obj, float startX, float endX, float y, float speed)
+    IEnumerator MoveMessageDownScreen(RectTransform obj, float x, float startY, float endY, float speed)
     {
         float timerInside = 0f;
-        float distance = Mathf.Abs(endX - startX);
+        float distance = Mathf.Abs(endY - startY);
         float duration = distance / Mathf.Max(speed, 1f);
 
         while (obj != null && timerInside < duration && timerInside < lifeTime)
         {
             timerInside += Time.deltaTime;
             float t = Mathf.Clamp01(timerInside / duration);
-            float x = Mathf.Lerp(startX, endX, t);
+            float y = Mathf.Lerp(startY, endY, t);
             obj.anchoredPosition = new Vector2(x, y);
             yield return null;
         }
